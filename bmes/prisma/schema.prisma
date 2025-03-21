@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(50)
+  email     String    @unique @db.VarChar(100)
+  password  String    @db.VarChar(255)
+  role      String    @default("user") @db.VarChar(20)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp()
+  inspections QualityControl[]
+  productions Production[]
+
+  @@map("users")
+}
+
+model Production {
+  id           Int             @id @default(autoincrement()) @map("product_id")
+  displayId    Int             @default(1) @map("display_id")
+  name         String          @db.VarChar(100)
+  status       String          @db.VarChar(50)
+  material     String?         @db.VarChar(255)
+  userId       Int?            @map("user_id")
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamp()
+  inspections  QualityControl[]
+  user         User?           @relation(fields: [userId], references: [id])
+
+  @@map("production")
+}
+
+model QualityControl {
+  id            Int       @id @default(autoincrement()) @map("inspection_id")
+  displayId     Int       @default(1) @map("display_id")
+  productId     Int       @map("product_id")
+  inspectionDate DateTime  @map("inspection_date") @db.Date
+  scheduledDate  DateTime  @map("scheduled_date") @db.Date
+  result        String    @db.VarChar(50)
+  userId        Int?      @map("user_id")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp()
+  product       Production @relation(fields: [productId], references: [id])
+  user          User?     @relation(fields: [userId], references: [id])
+
+  @@map("quality_control")
+}
