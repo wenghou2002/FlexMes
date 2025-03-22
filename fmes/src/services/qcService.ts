@@ -26,13 +26,18 @@ export type QualityControlInput = Omit<QualityControl, 'id' | 'createdAt' | 'pro
 export async function getInspections(): Promise<QualityControl[]> {
   const inspections = await QualityControlService.getAll();
   // Map backend fields to frontend fields
-  return inspections.map(insp => ({
-    ...insp,
-    inspection_id: insp.inspection_id || String(insp.id),
-    product_id: insp.product_id || String(insp.productId),
-    inspection_date: insp.inspection_date || insp.inspectionDate,
-    scheduled_date: insp.scheduled_date || insp.scheduledDate
-  }));
+  return inspections.map(insp => {
+    const productId = insp.productId || (insp.product_id ? parseInt(insp.product_id) : 0); // Default to 0 instead of undefined
+    
+    return {
+      ...insp,
+      inspection_id: insp.inspection_id || String(insp.id),
+      product_id: insp.product_id || String(productId),
+      productId: productId,
+      inspection_date: insp.inspection_date || insp.inspectionDate,
+      scheduled_date: insp.scheduled_date || insp.scheduledDate
+    };
+  });
 }
 
 export async function createInspection(data: QualityControlInput): Promise<QualityControl> {

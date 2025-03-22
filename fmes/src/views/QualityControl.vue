@@ -64,7 +64,9 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="inspection in filteredInspections" :key="inspection.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ inspection.displayId || inspection.id || inspection.inspection_id }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ inspection.product?.name || 'N/A' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ inspection.product?.name || (inspection.productId ? `Product #${inspection.productId}` : 'N/A') }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(inspection.inspection_date) }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="getResultClass(inspection.result)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
@@ -261,6 +263,16 @@ export default {
   },
   setup() {
     const toast = useToast();
+    
+    console.log('QualityControl component setup started');
+    console.log('Imported services:', { 
+      getInspections, 
+      createInspection, 
+      updateInspection, 
+      deleteInspectionApi, 
+      QualityControlService,
+      getProductions 
+    });
 
     const stats = computed(() => [
       {
@@ -335,11 +347,36 @@ export default {
     // Load data
     const loadData = async () => {
       try {
+        console.log('Starting data load...');
         const [inspectionsData, productsData] = await Promise.all([
           getInspections(),
           getProductions()
         ]);
-        inspections.value = inspectionsData;
+        
+        console.log('Fetched inspections:', JSON.stringify(inspectionsData, null, 2));
+        console.log('Fetched products:', JSON.stringify(productsData, null, 2));
+        
+        // Create a map of products by id for quick lookup
+        const productsMap = productsData.reduce((map, product) => {
+          map[product.id] = product;
+          return map;
+        }, {});
+        
+        console.log('Products map:', productsMap);
+        
+        // Associate each inspection with its product
+        inspections.value = inspectionsData.map(inspection => {
+          // Get product ID (could be in product_id or productId)
+          const productId = inspection.product_id ? parseInt(inspection.product_id) : inspection.productId;
+          console.log(`Mapping inspection ${inspection.id}, productId: ${productId}, found product:`, productsMap[productId]);
+          
+          // Associate the product with the inspection
+          return {
+            ...inspection,
+            product: productsMap[productId] || null
+          };
+        });
+        
         products.value = productsData;
       } catch (error) {
         console.error('Error loading data:', error);
@@ -477,6 +514,8 @@ export default {
     };
 
     const getResultClass = (result) => {
+      if (!result) return 'bg-gray-100 text-gray-800';
+      
       switch (result) {
         case 'Passed':
           return 'bg-green-100 text-green-800';
