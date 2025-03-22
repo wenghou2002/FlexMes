@@ -80,11 +80,21 @@ export const useAuthStore = defineStore('auth', () => {
       await logoutService();
       user.value = null;
       isAuthenticated.value = false;
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
     } catch (err: any) {
       console.error('Logout error:', err);
     } finally {
       loading.value = false;
     }
+  };
+
+  // Reset auth state (for token expiration)
+  const resetAuth = () => {
+    user.value = null;
+    isAuthenticated.value = false;
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
   };
 
   // Computed
@@ -102,6 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
+    resetAuth,
     
     // Computed
     userRole,

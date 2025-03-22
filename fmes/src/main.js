@@ -35,7 +35,9 @@ import {
   faBell,
   faUser,
   faChartLine,
-  faTable
+  faTable,
+  faClock,
+  faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons';
 
 // Add the icons to the library
@@ -55,7 +57,9 @@ library.add(
   faBell,
   faUser,
   faChartLine,
-  faTable
+  faTable,
+  faClock,
+  faExclamationCircle
 );
 
 // Initialize AOS animation library

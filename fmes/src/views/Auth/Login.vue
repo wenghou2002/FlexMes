@@ -1,6 +1,17 @@
 <template>
   <AuthLayout title="Sign in to your account">
     <div class="space-y-6">
+      <div v-if="tokenExpired" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <font-awesome-icon icon="clock" class="h-5 w-5 text-yellow-400" />
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-yellow-700">Your session has expired. Please sign in again to continue.</p>
+          </div>
+        </div>
+      </div>
+      
       <div v-if="error" class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
         <div class="flex">
           <div class="flex-shrink-0">
@@ -100,7 +111,7 @@
 
 <script>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from 'vue-toastification';
 import AuthLayout from '@/layouts/AuthLayout.vue';
@@ -119,6 +130,7 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const authStore = useAuthStore();
     const toast = useToast();
     
@@ -129,6 +141,12 @@ export default {
     
     const loading = ref(false);
     const error = ref('');
+    const tokenExpired = ref(false);
+    
+    // Check if redirected due to token expiration
+    if (route.query.expired === 'true') {
+      tokenExpired.value = true;
+    }
     
     const handleLogin = async () => {
       loading.value = true;
@@ -150,6 +168,7 @@ export default {
       form,
       loading,
       error,
+      tokenExpired,
       handleLogin
     };
   }

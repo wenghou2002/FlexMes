@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { useAuthStore } from '@/stores/authStore';
+import router from '@/router';
 
 // Create axios instance with base URL from environment variable
 const api = axios.create({
@@ -27,13 +29,16 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // If error is 401 and not already retrying
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // If error is 401 (Unauthorized) or 403 (Forbidden) and not already retrying
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
         // Try to refresh the token
-        const { data } = await axios.get('/api/auth/refresh', { withCredentials: true });
+        const { data } = await axios.get('/api/auth/refresh', { 
+          baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+          withCredentials: true 
+        });
         
         // Update token in localStorage
         localStorage.setItem('accessToken', data.accessToken);
@@ -44,10 +49,23 @@ api.interceptors.response.use(
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, clear localStorage and redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        // If refresh fails, handle token expiration
+        console.log('Token refresh failed, redirecting to login');
+        
+        // Update auth store state
+        const authStore = useAuthStore();
+        if (authStore) {
+          authStore.resetAuth();
+        }
+        
+        // Redirect to login page
+        if (router.currentRoute.value.name !== 'Login') {
+          router.push({ 
+            name: 'Login', 
+            query: { redirect: router.currentRoute.value.fullPath, expired: 'true' } 
+          });
+        }
+        
         return Promise.reject(refreshError);
       }
     }
