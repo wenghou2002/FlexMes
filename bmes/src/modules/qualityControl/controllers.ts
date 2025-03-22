@@ -5,7 +5,6 @@ import fs from 'fs';
 import path from 'path';
 import { getMalaysiaTime } from '../../utils/dateUtils';
 import { QualityControlService } from './services';
-import { SeverityLevel } from './models';
 
 // Extend the Express Request type to include the user property
 interface AuthenticatedRequest extends Request {
@@ -53,7 +52,7 @@ export const getQualityControlById = async (req: Request, res: Response): Promis
 // Create a new quality control record
 export const createQualityControl = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { productId, inspectionDate, scheduledDate, result, notes, severity } = req.body;
+    const { productId, inspectionDate, scheduledDate, result, notes } = req.body;
     const userId = req.user?.userId;
     
     console.log('Creating QC with user ID:', userId);
@@ -64,7 +63,6 @@ export const createQualityControl = async (req: AuthenticatedRequest, res: Respo
       scheduledDate: new Date(scheduledDate),
       result,
       notes,
-      severity: severity as SeverityLevel | undefined,
       userId
     };
 
@@ -107,7 +105,7 @@ export const updateQualityControl = async (req: AuthenticatedRequest, res: Respo
       return;
     }
     
-    const { productId, inspectionDate, scheduledDate, result, severity, notes } = req.body;
+    const { productId, inspectionDate, scheduledDate, result, notes } = req.body;
     
     // Create update data object
     const updateData: any = {};
@@ -116,7 +114,6 @@ export const updateQualityControl = async (req: AuthenticatedRequest, res: Respo
     if (inspectionDate) updateData.inspectionDate = new Date(inspectionDate);
     if (scheduledDate) updateData.scheduledDate = new Date(scheduledDate);
     if (result) updateData.result = result;
-    if (result === 'Failed' && severity) updateData.severity = severity as SeverityLevel;
     if (notes !== undefined) updateData.notes = notes;
     
     // Update quality control record using service
@@ -185,8 +182,7 @@ export const exportQualityControlCSV = async (req: AuthenticatedRequest, res: Re
         inspector: username,
         inspection_date: record.inspectionDate.toISOString().split('T')[0],
         scheduled_date: record.scheduledDate.toISOString().split('T')[0],
-        result: record.result,
-        severity: record.severity || 'N/A'
+        result: record.result
       };
     });
     
@@ -201,8 +197,7 @@ export const exportQualityControlCSV = async (req: AuthenticatedRequest, res: Re
       'inspector',
       'inspection_date',
       'scheduled_date',
-      'result',
-      'severity'
+      'result'
     ];
     
     const json2csvParser = new Parser({ fields });

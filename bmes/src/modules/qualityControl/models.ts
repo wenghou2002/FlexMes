@@ -2,9 +2,6 @@
  * QualityControl model interfaces for type safety in the application
  */
 
-// Severity levels for failed quality controls
-export type SeverityLevel = 'Low' | 'Medium' | 'High' | 'Critical';
-
 // Base model for QualityControl records
 export interface QualityControl {
   id: number;
@@ -13,7 +10,6 @@ export interface QualityControl {
   inspectionDate: Date;
   scheduledDate: Date;
   result: string;
-  severity?: SeverityLevel | null;
   notes?: string | null;
   userId?: number | null;
   createdAt: Date;
@@ -25,7 +21,6 @@ export interface QualityControlInput {
   inspectionDate: Date;
   scheduledDate: Date;
   result: string;
-  severity?: SeverityLevel | null;
   notes?: string | null;
   userId?: number | null;
 }
@@ -36,7 +31,6 @@ export interface QualityControlUpdateInput {
   inspectionDate?: Date;
   scheduledDate?: Date;
   result?: string;
-  severity?: SeverityLevel | null;
   notes?: string | null;
 }
 

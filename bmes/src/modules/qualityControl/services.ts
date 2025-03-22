@@ -89,11 +89,6 @@ export class QualityControlService {
       }
     }
 
-    // Handle severity for failed results
-    if (data.result === 'Failed' && !data.severity) {
-      data.severity = 'Low' as SeverityLevel; // Default severity
-    }
-
     // Add displayId to the data
     const qualityControlWithDisplayId = {
       ...data,
